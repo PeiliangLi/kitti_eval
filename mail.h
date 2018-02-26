@@ -11,22 +11,22 @@ public:
 
   Mail (std::string email = "") {
     if (email.compare("")) {
-      mail = popen("/usr/lib/sendmail -t -f noreply@cvlibs.net","w");
+      mail = popen("/usr/lib/sendmail -t -f pliap@connect.ust.hk","w");
       fprintf(mail,"To: %s\n", email.c_str());
-      fprintf(mail,"From: noreply@cvlibs.net\n");
+      fprintf(mail,"From: pliap@connect.ust.hk\n");
       fprintf(mail,"Subject: KITTI Evaluation Benchmark\n");
       fprintf(mail,"\n\n");
     } else {
       mail = 0;
     }
   }
-  
+
   ~Mail() {
     if (mail) {
       pclose(mail);
     }
   }
-  
+
   void msg (const char *format, ...) {
     va_list args;
     va_start(args,format);
@@ -38,11 +38,11 @@ public:
     printf("\n");
     va_end(args);
   }
-    
+
 private:
 
   FILE *mail;
-  
+
 };
 
 #endif

@@ -134,6 +134,7 @@ vector<tDetection> loadDetections(string file_name, bool &compute_aos,
 
   // holds all detections (ignored detections are indicated by an index vector
   vector<tDetection> detections;
+  cout << "load detection for: " << file_name << endl;
   FILE *fp = fopen(file_name.c_str(),"r");
   if (!fp) {
     success = false;
@@ -158,7 +159,7 @@ vector<tDetection> loadDetections(string file_name, bool &compute_aos,
 
       // a class is only evaluated if it is detected at least once
       for (int c = 0; c < NUM_CLASS; c++) {
-        if (!strcasecmp(d.box.type.c_str(), CLASS_NAMES[c].c_str())) {
+        if (!strcasecmp(d.box.type.c_str(), CLASS_NAMES[c].c_str())) { //equal
           if (!eval_image[c] && d.box.x1 >= 0)
             eval_image[c] = true;
           if (!eval_ground[c] && d.t1 != -1000)
@@ -378,7 +379,8 @@ vector<double> getThresholds(vector<double> &v, double n_groundtruth){
   return t;
 }
 
-void cleanData(CLASSES current_class, const vector<tGroundtruth> &gt, const vector<tDetection> &det, vector<int32_t> &ignored_gt, vector<tGroundtruth> &dc, vector<int32_t> &ignored_det, int32_t &n_gt, DIFFICULTY difficulty){
+void cleanData(CLASSES current_class, const vector<tGroundtruth> &gt, const vector<tDetection> &det, vector<int32_t> &ignored_gt,
+  vector<tGroundtruth> &dc, vector<int32_t> &ignored_det, int32_t &n_gt, DIFFICULTY difficulty){
 
   // extract ground truth bounding boxes for current evaluation class
   for(int32_t i=0;i<gt.size(); i++){
@@ -391,7 +393,7 @@ void cleanData(CLASSES current_class, const vector<tGroundtruth> &gt, const vect
     int32_t valid_class;
 
     // all classes without a neighboring class
-    if(!strcasecmp(gt[i].box.type.c_str(), CLASS_NAMES[current_class].c_str()))
+    if(!strcasecmp(gt[i].box.type.c_str(), CLASS_NAMES[current_class].c_str()))  //strictly equal the current class
       valid_class = 1;
 
     // classes with a neighboring class
@@ -418,7 +420,7 @@ void cleanData(CLASSES current_class, const vector<tGroundtruth> &gt, const vect
     }
 
     // neighboring class, or current class but ignored
-    else if(valid_class==0 || (ignore && valid_class==1))
+    else if(valid_class==0 || (ignore && valid_class==1))   //??????
       ignored_gt.push_back(1);
 
     // all other classes which are FN in the evaluation
@@ -515,7 +517,7 @@ tPrData computeStatistics(CLASSES current_class, const vector<tGroundtruth> &gt,
         det_idx         = j;
         valid_detection = 1;
         assigned_ignored_det = false;
-      }
+      }                                                                                              //neighboring class, or current class but ignored
       else if(compute_fp && overlap>MIN_OVERLAP[metric][current_class] && valid_detection==NO_DETECTION && ignored_det[j]==1){
         det_idx              = j;
         valid_detection      = 1;
@@ -655,7 +657,7 @@ bool eval_class (FILE *fp_det, FILE *fp_ori, CLASSES current_class,
 
   // get scores that must be evaluated for recall discretization
   thresholds = getThresholds(v, n_gt);
-
+  cout << "v size: " << v.size() << " threshold size: " << thresholds.size() << endl;
   // compute TP,FP,FN for relevant scores
   vector<tPrData> pr;
   pr.assign(thresholds.size(),tPrData());
@@ -816,7 +818,7 @@ bool eval(string gt_dir, string result_dir, Mail* mail){
 
   // for all images read groundtruth and detections
   mail->msg("Loading detections...");
-  std::vector<int32_t> indices = getEvalIndices(result_dir + "/data/");
+  std::vector<int32_t> indices = getEvalIndices(result_dir + "/");
   printf("number of files for evaluation: %d\n", (int)indices.size());
 
   for (int32_t i=0; i<indices.size(); i++) {
@@ -828,7 +830,7 @@ bool eval(string gt_dir, string result_dir, Mail* mail){
     // read ground truth and result poses
     bool gt_success,det_success;
     vector<tGroundtruth> gt   = loadGroundtruth(gt_dir + "/" + file_name,gt_success);
-    vector<tDetection>   det  = loadDetections(result_dir + "/data/" + file_name,
+    vector<tDetection>   det  = loadDetections(result_dir + "/" + file_name,
             compute_aos, eval_image, eval_ground, eval_3d, det_success);
     groundtruth.push_back(gt);
     detections.push_back(det);
@@ -943,5 +945,3 @@ int32_t main (int32_t argc,char *argv[]) {
 
   return 0;
 }
-
-
